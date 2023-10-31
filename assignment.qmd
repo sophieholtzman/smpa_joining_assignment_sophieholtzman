@@ -44,7 +44,7 @@ Now Combine (stack) the two dataframes into one combined dataframe, so all the r
 ```{r}
 
 
-
+combined <- full_join(primary_dem, primary_rep)
 
 
 
@@ -60,7 +60,8 @@ To use clean_names() you apply it to your dataframe like:
 
 ```{r}
 
-
+combined <- combined %>%
+clean_names()
 
 
 
@@ -80,7 +81,8 @@ Next use left_join() to join the two tables based on the unique combination of p
 
 ```{r}
 
-
+combined_precinct <- combined %>%
+  left_join(precinct_voting_locations, by = c("election_district_precinct" = "precinct_code", "county" = "county_code"))
 
 
 
@@ -95,7 +97,8 @@ Write code to produce a `votes` column which is the result of adding together `e
 
 ```{r}
 
-
+combined_precinct <- combined_precinct %>%
+  mutate(total_votes = (early_votes + provisional_votes + election_night_votes + mail_in_ballot_1_votes + mail_in_ballot_2_votes))
 
 ```
 
@@ -104,12 +107,19 @@ Next, separately write code to show each county and precinct and calculate the t
 ```{r}
 
 
-
+combined_precinct %>%
+  filter(office_name == "Governor / Lt. Governor") %>% 
+  group_by(county_name, election_district_precinct, location_name) %>%
+  summarise(n(),
+            total_votes)%>%
+  arrange(desc(total_votes))%>%
+  View()
 
 
 ```
 
 What is the name and voting location of the precinct that saw the most votes in the governor's race? *Put answer here*
+#Prince George's County, DR. HENRY A. WISE, JR. HIGH SCHOOL
 
 ### Q2.
 
@@ -118,26 +128,41 @@ Let's look at the average number of votes in each party's primary race for gover
 ```{r}
 
 
-
+combined_precinct %>%
+  filter(office_name == "Governor / Lt. Governor") %>% 
+  group_by(county_name, election_district_precinct, location_name) %>%
+  summarise(
+           n = n(),
+            total_votes = sum(total_votes))%>%
+  arrange(total_votes)%>%
+  View()
 
 
 
 ```
 
 How many precincts are there, and which county has the most? *Put answer here*
+#12, Prince George's County
 
 What else would you need to know about these precincts to know whether this might be worth a story? *Put answer here*
+#I would need to know their population and whether it was large enough to make the lack of voters significant.
 
 ### Q3.
 
 Choose your own adventure: I want you to come up with a question you could ask of one of the dataframes we've created for this lab. It could involve candidates, or counties or types of voting, but it cannot be a variation of a previous question (so, for example, you can't ask, "What's the average number of votes per precinct in the U.S. Senate primary?").
 
 First write the question and then try to answer it by writing code. If you're not sure of the exact code at a minimum, describe what you think you'd have to do to answer it and what the results would look like.
+#Which precinct had the highest number of total votes, not just governor votes? Precinct 15005 had the highest number of total votes.
 
 ```{r}
 
-
-
+combined_precinct %>%
+  group_by(county_name, election_district_precinct, location_name) %>%
+  summarise(
+           n = n(),
+            total_votes = sum(total_votes))%>%
+  arrange(desc(total_votes))%>%
+  View()
 
 
 ```
